@@ -3,9 +3,7 @@ dist_man8_MANS = viewssld.8
 EXTRA_DIST = $(DOCS)
 
 viewssldconfdir = $(sysconfdir)
-viewssldconf_DATA = examples/viewssld.conf
-#EXTRA_DIST = viewssld.conf $(DOCS)
+viewssldconf_DATA = viewssld.conf
 
-#install-data-local:
-#	test -z "/etc/viewssld.conf" || $(INSTALL) -m 600 examples/viewssld.conf /etc/viewssld.conf
-
+init_ddir = $(sysconfdir)/init.d
+init_d_SCRIPTS = viewssld
