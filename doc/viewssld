@@ -32,9 +32,6 @@ PIDFILE=$(cat "$CONFIGURATION_FILE" | sed -n 's/^pid = \(.*\)$/\1/p')
 # Note: 'viewssl' isn't mistype
 PIDFILE=${PIDFILE:-'/var/run/viewssl.pid'}
 
-# Will be set by /lib/init/vars.sh
-VERBOSE=no
-
 
 # ----------------------------------------------------------------------------------------------------------------------
 #                                                                                                            Error Codes
@@ -65,7 +62,7 @@ die()
 # End the script.
 end()
 {
-	[ "${VERBOSE}" != no ] && log_end_msg 0
+	log_end_msg 0
 	exit 0
 }
 
@@ -78,13 +75,7 @@ fail()
 # Display informational message.
 info()
 {
-	[ "${VERBOSE}" != no ] && log_daemon_msg "${NAME}" "$1"
-}
-
-# Display success message.
-ok()
-{
-	[ "${VERBOSE}" != no ] && log_success_msg "${NAME}" "$1"
+	log_daemon_msg "${NAME}" "$1"
 }
 
 # Display warning message.
@@ -119,13 +110,17 @@ check_privileges()
 # Starts the service.
 #
 # RETURN:
-#   0 - successfully started
-#   1 - starting failed
-###
+#   0 = Program is running
+#   1 = Program is not running and the PID file exists.
+#   2 = Program is not running and a LOCK file exists.
+#   3 = Program is not running.
+#   4 = Unable to determine status.
 start_service()
 {
-    echo "Starting $NAME..."
     start-stop-daemon --start ${SSD_OPTIONS} -- ${DAEMON_ARGS}
+    sleep 0.1;
+    #status_of_proc "${DAEMON}" "${NAME}" 1>/dev/null  || exit $?
+    start-stop-daemon --status ${SSD_OPTIONS} 2>/dev/null 1>/dev/null
 }
 
 ###
@@ -137,7 +132,6 @@ start_service()
 ###
 stop_service()
 {
-    echo "Stopping $NAME..."
 	start-stop-daemon --stop --signal QUIT --retry=TERM/5/KILL/5 ${SSD_OPTIONS}
 }
 
@@ -236,7 +230,7 @@ case "$1" in
         check_privileges
 		if [ ${STATUS} -eq 0 ]
 		then
-			ok 'already started.'
+			info 'already started.'
 		else
 			info 'starting ...'
 			start_service || die ${EC_START_FAILED}
